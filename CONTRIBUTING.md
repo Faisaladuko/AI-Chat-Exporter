@@ -298,7 +298,7 @@ extractCodeBlocks(element) {
 
 - 💬 [GitHub Discussions](https://github.com/yourusername/ai-chat-exporter/discussions) - Ask questions
 - 🐛 [GitHub Issues](https://github.com/yourusername/ai-chat-exporter/issues) - Report bugs
-- 📧 Email: your-email@example.com
+- 📧 Email: faisaladuko@gmail.com
 
 ---
 
