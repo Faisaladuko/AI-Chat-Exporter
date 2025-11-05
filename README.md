@@ -301,8 +301,8 @@ MIT License - see [LICENSE](LICENSE) file for details
 ## 📧 Contact & Support
 
 - **GitHub Issues**: For bug reports and feature requests
-- **Email**: [your-email@example.com]
-- **Twitter**: [@yourhandle]
+- **Email**: [faisaladuko@gmail.com]
+- **Twitter**: [@adukobility]
 
 ---
 
