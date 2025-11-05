@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Chat Exporter</title>
+  <link rel="stylesheet" href="styles/popup.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-icon">📥</div>
+      <h1>AI Chat Exporter</h1>
+      <p class="subtitle">Export your AI conversations</p>
+    </header>
+
+    <main>
+      <section class="controls">
+        <div class="button-group">
+          <button id="enableSelect" class="btn btn-primary">
+            <span class="btn-icon">✓</span>
+            Enable Selection Mode
+          </button>
+        </div>
+
+        <div class="selection-controls" id="selectionControls" style="display: none;">
+          <div class="selection-count" id="selectionCount">0 messages selected</div>
+          <div>
+            <button id="selectAll" class="btn btn-small">Select All</button>
+            <button id="clearSelection" class="btn btn-small">Clear All</button>
+          </div>
+        </div>
+
+        <div class="format-section">
+          <label for="format">
+            <span class="label-icon">📄</span>
+            Export Format
+          </label>
+          <select id="format" class="format-select">
+            <option value="markdown">📝 Markdown (.md)</option>
+            <option value="docx">📄 Word Document (.docx)</option>
+            <option value="pdf" selected>📋 PDF (.pdf)</option>
+          </select>
+        </div>
+
+        <div class="button-group">
+          <button id="export" class="btn btn-success">
+            <span class="btn-icon">⬇</span>
+            Export Selected
+          </button>
+        </div>
+      </section>
+
+      <section class="info">
+        <div class="info-item">
+          <span class="info-icon">ℹ️</span>
+          <p>Click "Enable Selection" to start selecting messages from your conversation</p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Made with ❤️ for researchers & students</p>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

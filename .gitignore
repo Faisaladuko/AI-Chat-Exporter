@@ -1,0 +1,74 @@
+# AI Chat Exporter - .gitignore
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Editor and IDE Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.sublime-project
+.sublime-workspace
+
+# Node.js (if using build tools)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Extension Development
+*.pem
+*.crx
+*.xpi
+*.zip
+
+# Build Output
+dist/
+build/
+.cache/
+
+# Temporary Files
+*.tmp
+*.temp
+*.log
+.temp/
+temp/
+
+# Test Coverage
+coverage/
+.nyc_output/
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Private/Secret Files
+secrets/
+private/
+*.key
+*.secret
+
+# Documentation Build
+docs/_build/
+docs/.buildinfo
+
+# Compressed Archives (except releases)
+*.tar.gz
+*.rar
+*.7z
+
+# Keep these files
+!icons/*.png
+!libs/*.js
