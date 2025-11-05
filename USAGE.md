@@ -3,10 +3,10 @@
 ## Getting Started in 4 Steps
 
 ### 1️⃣ Open a Conversation
-Navigate to ChatGPT, Grok, or DeepSeek and open any conversation.
+Navigate to ChatGPT, Grok, Gemini, or DeepSeek and open any conversation.
 
 ### 2️⃣ Find the Export Button
-- **ChatGPT/Grok**: Look for the purple gradient button in the header (download arrow icon)
+- **ChatGPT/Grok/Gemini**: Look for the purple gradient button in the header (download arrow icon)
 - **DeepSeek**: Look for the floating button on the right side
 - The button appears automatically when the page loads
 
@@ -96,6 +96,12 @@ If you don't select any messages and click Export, you'll be prompted to export 
 - **Button Location**: Native header integration
 - **Styling**: Purple gradient button with platform-specific sizing
 - **Features**: Full conversation parsing with proper role detection
+
+### Gemini (Google)
+- **Button Location**: Native header integration (left of menu button)
+- **Styling**: Purple gradient button matching other platforms
+- **Features**: Full conversation parsing with edit button role detection
+- **Note**: Button appears in top-bar right section before action buttons
 
 ### DeepSeek
 - **Button Location**: Floating button on right side of page

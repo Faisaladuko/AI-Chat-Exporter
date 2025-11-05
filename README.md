@@ -37,8 +37,8 @@ AI Chat Exporter is a powerful, privacy-focused browser extension that enables y
 - ✅ **ChatGPT** (OpenAI) - Full support with header integration
 - ✅ **Grok** (xAI) - Full support with header integration
 - ✅ **DeepSeek** - Full support with floating button
+- ✅ **Gemini** (Google) - Full support with header integration
 - 🚧 **Claude** (Anthropic) - Coming soon
-- 🚧 **Gemini** (Google) - Coming soon
 
 ---
 

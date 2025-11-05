@@ -60,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Platform Support**
   - ✅ Grok (xAI) platform parser with full support
   - ✅ DeepSeek platform parser with edit-button-based role detection
+  - ✅ Gemini (Google) platform parser with header integration
   - Platform-specific button injection and styling
 
 - **UI Enhancements**
