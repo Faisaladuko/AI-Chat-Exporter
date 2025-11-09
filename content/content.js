@@ -8,6 +8,52 @@ console.log('[AI Exporter] Content script loaded on:', window.location.href);
 // Initialize parser
 let parser = null;
 let selectedMessages = new Set();
+let currentExportMode = null; // 'word' or 'pdf'
+
+// Default export settings
+const defaultSettings = {
+  filename: '',
+  documentTitle: '',
+  pageMargins: 60,
+  theme: 'light',
+  orientation: 'portrait',
+  pageFormat: 'A4',
+  enableCompression: false
+};
+
+// Current settings (loaded from storage)
+let exportSettings = { ...defaultSettings };
+
+/**
+ * Load export settings from chrome.storage
+ */
+async function loadSettings() {
+  try {
+    const result = await chrome.storage.sync.get('exportSettings');
+    if (result.exportSettings) {
+      exportSettings = { ...defaultSettings, ...result.exportSettings };
+    }
+    console.log('[AI Exporter] Settings loaded:', exportSettings);
+  } catch (error) {
+    console.error('[AI Exporter] Failed to load settings:', error);
+  }
+}
+
+/**
+ * Save export settings to chrome.storage
+ */
+async function saveSettings(settings) {
+  try {
+    exportSettings = { ...exportSettings, ...settings };
+    await chrome.storage.sync.set({ exportSettings });
+    console.log('[AI Exporter] Settings saved:', exportSettings);
+  } catch (error) {
+    console.error('[AI Exporter] Failed to save settings:', error);
+  }
+}
+
+// Load settings on script initialization
+loadSettings();
 
 // Parser classes will be loaded dynamically
 let ChatGPTParser = null;
@@ -16,7 +62,6 @@ let DeepSeekParser = null;
 let GeminiParser = null;
 
 // Exporter functions will be loaded dynamically
-let exportToMarkdown = null;
 let exportToDocx = null;
 let exportToPDF = null;
 
@@ -81,9 +126,6 @@ async function loadParsers() {
  */
 async function loadExporters() {
   try {
-    const markdownModule = await import(chrome.runtime.getURL('content/exporters/MarkdownExporter.js'));
-    exportToMarkdown = markdownModule.exportToMarkdown;
-    
     const docxModule = await import(chrome.runtime.getURL('content/exporters/DOCXExporter.js'));
     exportToDocx = docxModule.exportToDocx;
     
@@ -370,6 +412,130 @@ function showBanner(message, duration = null) {
 function updateBanner() {
   const count = selectedMessages.size;
   showBanner(`${count} message${count !== 1 ? 's' : ''} selected`);
+  updateExportButtonVisibility();
+}
+
+/**
+ * Update export button visibility based on selection
+ */
+function updateExportButtonVisibility() {
+  const exportButton = document.getElementById('ai-exporter-export-btn');
+  if (exportButton) {
+    if (selectedMessages.size > 0 && currentExportMode) {
+      exportButton.style.display = 'flex';
+    } else {
+      exportButton.style.display = 'none';
+    }
+  }
+}
+
+/**
+ * Toggle settings panel
+ */
+function toggleSettingsPanel() {
+  let panel = document.getElementById('ai-exporter-settings-panel');
+  
+  if (panel) {
+    panel.remove();
+    return;
+  }
+  
+  // Create settings panel
+  panel = document.createElement('div');
+  panel.id = 'ai-exporter-settings-panel';
+  panel.className = 'ai-exporter-settings-panel';
+  
+  // Get current date for default filename
+  const today = new Date().toISOString().split('T')[0];
+  const platformName = window.location.hostname.split('.')[0];
+  
+  panel.innerHTML = `
+    <div class="ai-exporter-settings-header">
+      <h3>Export Settings</h3>
+      <button class="ai-exporter-settings-close" aria-label="Close settings">×</button>
+    </div>
+    <div class="ai-exporter-settings-body">
+      <div class="ai-exporter-settings-field">
+        <label for="ai-exporter-filename">File name:</label>
+        <input type="text" id="ai-exporter-filename" value="${exportSettings.filename || `${platformName}-chat.${today}`}" />
+      </div>
+      
+      <div class="ai-exporter-settings-field">
+        <label for="ai-exporter-title">Document title:</label>
+        <input type="text" id="ai-exporter-title" value="${exportSettings.documentTitle || `${platformName.charAt(0).toUpperCase() + platformName.slice(1)} Chat`}" />
+      </div>
+      
+      <div class="ai-exporter-settings-field">
+        <label for="ai-exporter-margins">Page margins (px):</label>
+        <input type="number" id="ai-exporter-margins" value="${exportSettings.pageMargins}" min="0" max="200" />
+      </div>
+      
+      <div class="ai-exporter-settings-field">
+        <label for="ai-exporter-theme">Theme:</label>
+        <select id="ai-exporter-theme">
+          <option value="light" ${exportSettings.theme === 'light' ? 'selected' : ''}>Light</option>
+          <option value="dark" ${exportSettings.theme === 'dark' ? 'selected' : ''}>Dark</option>
+        </select>
+      </div>
+      
+      <div class="ai-exporter-settings-field">
+        <label for="ai-exporter-orientation">Orientation:</label>
+        <select id="ai-exporter-orientation">
+          <option value="portrait" ${exportSettings.orientation === 'portrait' ? 'selected' : ''}>Portrait</option>
+          <option value="landscape" ${exportSettings.orientation === 'landscape' ? 'selected' : ''}>Landscape</option>
+        </select>
+      </div>
+      
+      <div class="ai-exporter-settings-field">
+        <label for="ai-exporter-format">Page format:</label>
+        <select id="ai-exporter-format">
+          <option value="A4" ${exportSettings.pageFormat === 'A4' ? 'selected' : ''}>A4</option>
+          <option value="Letter" ${exportSettings.pageFormat === 'Letter' ? 'selected' : ''}>Letter</option>
+          <option value="Legal" ${exportSettings.pageFormat === 'Legal' ? 'selected' : ''}>Legal</option>
+        </select>
+      </div>
+      
+      <div class="ai-exporter-settings-field">
+        <label>
+          <input type="checkbox" id="ai-exporter-compression" ${exportSettings.enableCompression ? 'checked' : ''} />
+          Enable PDF compression
+        </label>
+      </div>
+    </div>
+    <div class="ai-exporter-settings-footer">
+      <button class="ai-exporter-settings-save">Save Settings</button>
+    </div>
+  `;
+  
+  document.body.appendChild(panel);
+  
+  // Add event listeners
+  panel.querySelector('.ai-exporter-settings-close').addEventListener('click', () => {
+    panel.remove();
+  });
+  
+  panel.querySelector('.ai-exporter-settings-save').addEventListener('click', async () => {
+    const newSettings = {
+      filename: document.getElementById('ai-exporter-filename').value,
+      documentTitle: document.getElementById('ai-exporter-title').value,
+      pageMargins: parseInt(document.getElementById('ai-exporter-margins').value),
+      theme: document.getElementById('ai-exporter-theme').value,
+      orientation: document.getElementById('ai-exporter-orientation').value,
+      pageFormat: document.getElementById('ai-exporter-format').value,
+      enableCompression: document.getElementById('ai-exporter-compression').checked
+    };
+    
+    await saveSettings(newSettings);
+    showBanner('✓ Settings saved successfully!', 2000);
+    panel.remove();
+  });
+  
+  // Close on outside click
+  panel.addEventListener('click', (e) => {
+    if (e.target === panel) {
+      panel.remove();
+    }
+  });
 }
 
 /**
@@ -389,22 +555,23 @@ window.exportAs = async function(format, messages, title = 'AI Conversation') {
   console.log(`[AI Exporter] Exporting ${messages.length} messages as ${format}`);
   
   // Load exporters if not already loaded
-  if (!exportToMarkdown || !exportToDocx || !exportToPDF) {
+  if (!exportToDocx || !exportToPDF) {
     await loadExporters();
   }
   
+  // Use custom title from settings if available
+  const exportTitle = exportSettings.documentTitle || title;
+  
   const exportData = {
-    title: title,
+    title: exportTitle,
     messages: messages,
     exportDate: new Date().toISOString(),
     messageCount: messages.length,
-    platform: window.location.hostname
+    platform: window.location.hostname,
+    settings: exportSettings
   };
   
   switch (format.toLowerCase()) {
-    case "markdown":
-    case "md":
-      return exportToMarkdown(exportData);
     case "docx":
     case "doc":
       return exportToDocx(exportData);
@@ -416,50 +583,18 @@ window.exportAs = async function(format, messages, title = 'AI Conversation') {
 };
 
 /**
- * Helper: Convert HTML to plain text
- */
-function htmlToText(html) {
-  const temp = document.createElement('div');
-  temp.innerHTML = html;
-  temp.querySelectorAll('script, style').forEach(el => el.remove());
-  return temp.textContent.trim();
-}
-
-/**
- * Helper: Escape HTML
- */
-function escapeHtml(text) {
-  if (!text) return '';
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-/**
- * Helper: Sanitize filename
- */
-function sanitizeFilename(filename) {
-  return filename.replace(/[^a-z0-9_\-\.]/gi, '_').slice(0, 100);
-}
-
-// All exporter functions moved to separate modules
-// - MarkdownExporter.js
-// - DOCXExporter.js  
-// - PDFExporter.js
-
-/**
  * Create floating button to open extension
  */
 function createFloatingButton() {
-  // Check if button already exists
-  if (document.getElementById('ai-exporter-float-btn')) {
-    console.log('[AI Exporter] Button already exists');
+  // Check if button container already exists
+  if (document.getElementById('ai-exporter-button-container')) {
+    console.log('[AI Exporter] Button container already exists');
     return;
   }
 
   const hostname = window.location.hostname;
   let targetElement = null;
-  let buttonClass = 'ai-exporter-float-btn';
+  let buttonClass = 'ai-exporter-action-btn';
 
   console.log('[AI Exporter] Attempting to create button on:', hostname);
 
@@ -504,67 +639,154 @@ function createFloatingButton() {
     
     buttonClass += ' ai-exporter-gemini-btn';
     console.log('[AI Exporter] Gemini - Target element found:', !!targetElement);
+  } else if (hostname.includes('deepseek.com')) {
+    // DeepSeek: Try to find header/toolbar area
+    const deepseekSelectors = [
+      '[class*="header"]',
+      '[class*="toolbar"]',
+      '[class*="top-bar"]',
+      'header'
+    ];
+    
+    for (const selector of deepseekSelectors) {
+      targetElement = document.querySelector(selector);
+      if (targetElement) {
+        console.log('[AI Exporter] DeepSeek - Found header with selector:', selector);
+        break;
+      }
+    }
+    
+    buttonClass += ' ai-exporter-deepseek-btn';
+    console.log('[AI Exporter] DeepSeek - Target element found:', !!targetElement);
   }
 
-  const button = document.createElement('button');
-  button.id = 'ai-exporter-float-btn';
-  button.className = buttonClass;
-  button.innerHTML = `
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  // Create button container for the 3 buttons
+  const buttonContainer = document.createElement('div');
+  buttonContainer.id = 'ai-exporter-button-container';
+  buttonContainer.className = 'ai-exporter-button-container';
+
+  // Word Export Button
+  const wordButton = document.createElement('button');
+  wordButton.id = 'ai-exporter-word-btn';
+  wordButton.className = `${buttonClass} ai-exporter-action-btn`;
+  wordButton.innerHTML = `
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="4" y="2" width="16" height="20" rx="2" stroke="currentColor" stroke-width="2" fill="none"/>
+      <path d="M6.5 8l2 8 2-5 2 5 2-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="7" y1="18" x2="17" y2="18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>
+  `;
+  wordButton.title = 'Export to Word';
+  wordButton.setAttribute('aria-label', 'Export to Word');
+  
+  wordButton.addEventListener('click', async () => {
+    currentExportMode = 'word';
+    await window.enableChatSelection();
+    updateExportButtonVisibility();
+  });
+
+  // PDF Export Button
+  const pdfButton = document.createElement('button');
+  pdfButton.id = 'ai-exporter-pdf-btn';
+  pdfButton.className = `${buttonClass} ai-exporter-action-btn`;
+  pdfButton.innerHTML = `
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="4" y="2" width="16" height="20" rx="2" stroke="currentColor" stroke-width="2" fill="none"/>
+      <text x="12" y="15" text-anchor="middle" font-size="9" font-weight="bold" fill="currentColor" font-family="Arial, sans-serif">PDF</text>
+    </svg>
+  `;
+  pdfButton.title = 'Export to PDF';
+  pdfButton.setAttribute('aria-label', 'Export to PDF');
+  
+  pdfButton.addEventListener('click', async () => {
+    currentExportMode = 'pdf';
+    await window.enableChatSelection();
+    updateExportButtonVisibility();
+  });
+
+  // Settings Button
+  const settingsButton = document.createElement('button');
+  settingsButton.id = 'ai-exporter-settings-btn';
+  settingsButton.className = `${buttonClass} ai-exporter-action-btn`;
+  settingsButton.innerHTML = `
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+    </svg>
+  `;
+  settingsButton.title = 'Export Settings';
+  settingsButton.setAttribute('aria-label', 'Export Settings');
+  
+  settingsButton.addEventListener('click', () => {
+    toggleSettingsPanel();
+  });
+
+  // Add buttons to container
+  buttonContainer.appendChild(wordButton);
+  buttonContainer.appendChild(pdfButton);
+  buttonContainer.appendChild(settingsButton);
+
+  // Export button (shown when messages are selected)
+  const exportButton = document.createElement('button');
+  exportButton.id = 'ai-exporter-export-btn';
+  exportButton.className = `${buttonClass} ai-exporter-export-btn`;
+  exportButton.style.display = 'none';
+  exportButton.innerHTML = `
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       <polyline points="7 10 12 15 17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
+    <span style="margin-left: 4px; font-size: 12px;">Export</span>
   `;
-  button.title = 'Export Chat';
-  button.setAttribute('aria-label', 'Export chat');
+  exportButton.title = 'Export Selected Messages';
+  exportButton.setAttribute('aria-label', 'Export Selected Messages');
   
-  button.addEventListener('click', async () => {
-    // If messages are already selected, open the popup to choose export format
-    if (selectedMessages.size > 0) {
-      // Send message to background script to open popup
-      chrome.runtime.sendMessage({ action: 'openPopup' });
-    } else {
-      // Enable selection mode first
-      await window.enableChatSelection();
+  exportButton.addEventListener('click', async () => {
+    if (!currentExportMode) {
+      alert('Please select Word or PDF export first');
+      return;
     }
+    await window.exportSelectedChats(currentExportMode === 'word' ? 'docx' : 'pdf');
   });
+
+  buttonContainer.appendChild(exportButton);
 
   if (targetElement) {
     // Platform-specific insertion
     if (hostname.includes('chat.openai.com') || hostname.includes('chatgpt.com')) {
       const shareButton = targetElement.querySelector('[data-testid="share-chat-button"]');
       if (shareButton) {
-        targetElement.insertBefore(button, shareButton);
-        console.log('[AI Exporter] Button inserted before share button');
+        targetElement.insertBefore(buttonContainer, shareButton);
+        console.log('[AI Exporter] Button container inserted before share button');
       } else {
-        targetElement.appendChild(button);
+        targetElement.appendChild(buttonContainer);
         console.log('[AI Exporter] Share button not found, appended to parent');
       }
     } else if (hostname.includes('gemini.google.com')) {
       // For Gemini, find the first buttons-container and insert before it
       const firstButtonsContainer = targetElement.querySelector('.buttons-container');
       if (firstButtonsContainer) {
-        targetElement.insertBefore(button, firstButtonsContainer);
-        console.log('[AI Exporter] Gemini - Button inserted before buttons-container');
+        targetElement.insertBefore(buttonContainer, firstButtonsContainer);
+        console.log('[AI Exporter] Gemini - Button container inserted before buttons-container');
       } else {
-        targetElement.insertBefore(button, targetElement.firstElementChild);
-        console.log('[AI Exporter] Gemini - Button inserted as first child');
+        targetElement.insertBefore(buttonContainer, targetElement.firstElementChild);
+        console.log('[AI Exporter] Gemini - Button container inserted as first child');
       }
     } else {
       // For other platforms, insert before the last child
       if (targetElement.lastElementChild) {
-        targetElement.insertBefore(button, targetElement.lastElementChild);
-        console.log('[AI Exporter] Button inserted before last child');
+        targetElement.insertBefore(buttonContainer, targetElement.lastElementChild);
+        console.log('[AI Exporter] Button container inserted before last child');
       } else {
-        targetElement.appendChild(button);
-        console.log('[AI Exporter] Button appended to target');
+        targetElement.appendChild(buttonContainer);
+        console.log('[AI Exporter] Button container appended to target');
       }
     }
   } else {
     // Fallback: add to body with fixed position
-    document.body.appendChild(button);
-    console.log('[AI Exporter] Button added to body (fallback mode)');
+    document.body.appendChild(buttonContainer);
+    console.log('[AI Exporter] Button container added to body (fallback mode)');
   }
 }
 
@@ -578,12 +800,12 @@ const maxAttempts = 5;
 function tryCreateButton() {
   createFloatingButton();
   
-  // Check if button was created successfully
-  if (!document.getElementById('ai-exporter-float-btn') && buttonAttempts < maxAttempts) {
+  // Check if button container was created successfully
+  if (!document.getElementById('ai-exporter-button-container') && buttonAttempts < maxAttempts) {
     buttonAttempts++;
     console.log(`[AI Exporter] Retrying button creation (attempt ${buttonAttempts}/${maxAttempts})`);
     setTimeout(tryCreateButton, 1000);
-  } else if (document.getElementById('ai-exporter-float-btn')) {
+  } else if (document.getElementById('ai-exporter-button-container')) {
     // Button created successfully, reset attempts for future recreations
     buttonAttempts = 0;
   }
@@ -617,10 +839,10 @@ const urlObserver = new MutationObserver(() => {
       banner.style.display = 'none';
     }
     
-    // Remove existing button if present
-    const existingButton = document.getElementById('ai-exporter-float-btn');
-    if (existingButton) {
-      existingButton.remove();
+    // Remove existing button container if present
+    const existingContainer = document.getElementById('ai-exporter-button-container');
+    if (existingContainer) {
+      existingContainer.remove();
     }
     
     // Recreate button for new page

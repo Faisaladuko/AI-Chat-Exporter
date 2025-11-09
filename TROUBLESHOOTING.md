@@ -120,18 +120,17 @@ Test these in order:
 
 ### Before (Broken)
 ```javascript
-// ❌ This didn't work in content scripts
+// ❌ This didn't work in content scripts without proper setup
 import ChatGPTParser from "./parsers/ChatGPTParser.js";
-import BaseParser from "./parsers/BaseParser.js";
 ```
 
 ### After (Fixed)
 ```javascript
-// ✅ Everything embedded directly
-class ChatGPTParser {
-  constructor() { ... }
-  getMessages() { ... }
-}
+// ✅ Dynamic imports with chrome.runtime.getURL
+const chatgptUrl = chrome.runtime.getURL('content/parsers/ChatGPTParser.js');
+const chatgptModule = await import(chatgptUrl);
+ChatGPTParser = chatgptModule.ChatGPTParser;
+```
 
 window.enableChatSelection = function() { ... }
 window.exportSelectedChats = function() { ... }

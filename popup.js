@@ -62,12 +62,12 @@ document.getElementById("enableSelect").addEventListener("click", async () => {
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     
-    // Check if we're on a supported page (ChatGPT, Claude, Gemini, Grok, DeepSeek)
-    const supportedSites = ['chat.openai.com', 'chatgpt.com', 'claude.ai', 'gemini.google.com', 'grok.com', 'chat.deepseek.com'];
+    // Check if we're on a supported page (ChatGPT, Gemini, Grok, DeepSeek)
+    const supportedSites = ['chat.openai.com', 'chatgpt.com', 'gemini.google.com', 'grok.com', 'chat.deepseek.com'];
     const isSupported = supportedSites.some(site => tab.url && tab.url.includes(site));
     
     if (!isSupported) {
-      alert('Please navigate to a supported AI chat platform first!\n\nSupported: ChatGPT, Claude, Gemini, Grok, DeepSeek');
+      alert('Please navigate to a supported AI chat platform first!\n\nSupported: ChatGPT, Gemini, Grok, DeepSeek');
       btn.textContent = "Enable Selection Mode";
       btn.disabled = false;
       return;
@@ -197,9 +197,4 @@ document.getElementById("export").addEventListener("click", async () => {
     btn.disabled = false;
     alert("Export failed. Please try again.");
   }
-});
-
-// Format selection change
-document.getElementById("format").addEventListener("change", (e) => {
-  console.log("Selected format:", e.target.value);
 });

@@ -37,17 +37,8 @@ chrome.runtime.onInstalled.addListener((details) => {
   console.log('[AI Exporter Background] Extension installed/updated:', details.reason);
   
   if (details.reason === 'install') {
-    // First install
     console.log('[AI Exporter Background] Welcome! Extension installed successfully.');
-    
-    // Set default settings
-    chrome.storage.sync.set({
-      defaultFormat: 'markdown',
-      autoSelectAll: false,
-      showBanner: true
-    });
   } else if (details.reason === 'update') {
-    // Extension updated
     console.log('[AI Exporter Background] Extension updated to version:', chrome.runtime.getManifest().version);
   }
 });

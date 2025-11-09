@@ -74,7 +74,7 @@ function escapeHtml(text) {
  * Export to PDF - Creates a print-ready HTML that opens in new tab for PDF printing
  */
 export async function exportToPDF(exportData) {
-  const { title, messages } = exportData;
+  const { title, messages, settings = {} } = exportData;
   
   // Fetch KaTeX CSS for offline use
   let katexCSS = '';
@@ -89,6 +89,20 @@ export async function exportToPDF(exportData) {
   
   const processedMessages = processMessages(messages);
   
+  // Use settings or defaults
+  const margins = settings.pageMargins || 60;
+  const theme = settings.theme || 'light';
+  const orientation = settings.orientation || 'portrait';
+  const pageFormat = settings.pageFormat || 'A4';
+  const isLightTheme = theme === 'light';
+  
+  // Page size configurations
+  const pageSizes = {
+    'A4': orientation === 'portrait' ? '210mm 297mm' : '297mm 210mm',
+    'Letter': orientation === 'portrait' ? '8.5in 11in' : '11in 8.5in',
+    'Legal': orientation === 'portrait' ? '8.5in 14in' : '14in 8.5in'
+  };
+  
   // Create a print-ready HTML document
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -102,8 +116,8 @@ export async function exportToPDF(exportData) {
   </style>
   <style>
     @page { 
-      size: A4; 
-      margin: 1.5cm; 
+      size: ${pageSizes[pageFormat]}; 
+      margin: ${margins}px; 
     }
     
     @media print {
@@ -126,7 +140,8 @@ export async function exportToPDF(exportData) {
       font-family: 'Segoe UI', Arial, sans-serif; 
       font-size: 11pt; 
       line-height: 1.6; 
-      color: #333;
+      color: ${isLightTheme ? '#333' : '#e0e0e0'};
+      background: ${isLightTheme ? 'white' : '#1a1a1a'};
       max-width: 100%;
       margin: 0;
       padding: 20px;
@@ -145,7 +160,7 @@ export async function exportToPDF(exportData) {
     
     .message-content h2 {
       font-size: 14pt;
-      color: #2c3e50;
+      color: ${isLightTheme ? '#2c3e50' : '#4a9eff'};
       background: none;
       padding: 0;
       border-left: none;

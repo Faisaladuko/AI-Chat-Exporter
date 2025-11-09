@@ -108,26 +108,38 @@ ai-exporter/
 
 ## Adding Platform Support
 
-Want to add support for Claude, Gemini, or another AI platform? Follow these steps:
+Want to add support for Claude or another AI platform? Follow these steps:
 
 ### 1. Create a Parser Class
 
 Create `content/parsers/YourPlatformParser.js`:
 
 ```javascript
-import BaseParser from "./BaseParser.js";
-
-export default class YourPlatformParser extends BaseParser {
+export class YourPlatformParser {
   constructor() {
-    super("platform-domain.com", {
+    this.platformName = "platform-domain.com";
+    this.selectors = {
       userMessage: '.user-message-selector',
       assistantMessage: '.ai-message-selector',
       conversationTitle: 'h1.title'
-    });
+    };
+  }
+
+  detectPlatform() {
+    return window.location.hostname.includes(this.platformName);
   }
 
   /**
-   * Override this to customize title extraction
+   * Extract the conversation title
+   */
+  getConversationTitle() {
+    const titleElement = document.querySelector(this.selectors.conversationTitle);
+    return titleElement ? titleElement.textContent.trim() : 'AI Conversation';
+  }
+
+  /**
+   * Extract all messages from the page
+   */
    */
   getConversationTitle() {
     const titleEl = document.querySelector(this.selectors.conversationTitle);

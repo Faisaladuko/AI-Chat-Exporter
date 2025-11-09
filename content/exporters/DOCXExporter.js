@@ -74,9 +74,14 @@ function escapeHtml(text) {
  * Export to DOCX (HTML format with full formatting)
  */
 export function exportToDocx(exportData) {
-  const { title, messages } = exportData;
+  const { title, messages, settings = {} } = exportData;
   
   const processedMessages = processMessages(messages);
+  
+  // Use settings or defaults
+  const margins = settings.pageMargins || 60;
+  const theme = settings.theme || 'light';
+  const isLightTheme = theme === 'light';
   
   let html = `<!DOCTYPE html>
     <html>
@@ -86,20 +91,24 @@ export function exportToDocx(exportData) {
       <!-- KaTeX CSS for math rendering -->
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
       <style>
+        @page {
+          margin: ${margins}px;
+        }
         body { 
           font-family: 'Segoe UI', Calibri, Arial, sans-serif; 
           max-width: 800px; 
-          margin: 40px auto; 
+          margin: ${margins}px auto; 
           padding: 20px; 
           line-height: 1.6;
-          background: white;
+          background: ${isLightTheme ? 'white' : '#1a1a1a'};
+          color: ${isLightTheme ? '#000' : '#e0e0e0'};
         }
-        h2 { color: #2c3e50; font-size: 18px; margin-top: 20px; }
-        h3 { color: #555; font-size: 18px; margin-top: 20px; }
-        h4 { color: #666; font-size: 16px; margin-top: 15px; }
+        h2 { color: ${isLightTheme ? '#2c3e50' : '#4a9eff'}; font-size: 18px; margin-top: 20px; }
+        h3 { color: ${isLightTheme ? '#555' : '#6eb8ff'}; font-size: 18px; margin-top: 20px; }
+        h4 { color: ${isLightTheme ? '#666' : '#8dc9ff'}; font-size: 16px; margin-top: 15px; }
         
         .separator { 
-          border-top: 1px solid #bdc3c7; 
+          border-top: 1px solid ${isLightTheme ? '#bdc3c7' : '#444'}; 
           margin: 20px 0; 
         }
         
@@ -117,8 +126,8 @@ export function exportToDocx(exportData) {
         
         /* Code block styling */
         pre {
-          background: #2d2d2d;
-          color: #f8f8f2;
+          background: ${isLightTheme ? '#2d2d2d' : '#0d0d0d'};
+          color: ${isLightTheme ? '#f8f8f2' : '#f0f0f0'};
           padding: 15px;
           border-radius: 5px;
           overflow-x: auto;
@@ -134,10 +143,10 @@ export function exportToDocx(exportData) {
           color: inherit;
         }
         code:not(pre code) {
-          background: #f4f4f4;
+          background: ${isLightTheme ? '#f4f4f4' : '#333'};
           padding: 2px 6px;
           border-radius: 3px;
-          color: #c7254e;
+          color: ${isLightTheme ? '#c7254e' : '#ff6b9d'};
         }
         
         /* List styling */
@@ -152,17 +161,17 @@ export function exportToDocx(exportData) {
         
         /* Blockquote styling */
         blockquote {
-          border-left: 4px solid #95a5a6;
+          border-left: 4px solid ${isLightTheme ? '#95a5a6' : '#555'};
           padding-left: 15px;
           margin: 15px 0;
-          color: #555;
+          color: ${isLightTheme ? '#555' : '#aaa'};
           font-style: italic;
         }
         
         /* Text formatting */
         strong, b { 
           font-weight: 600; 
-          color: #2c3e50; 
+          color: ${isLightTheme ? '#2c3e50' : '#4a9eff'}; 
         }
         em, i { 
           font-style: italic; 
@@ -170,7 +179,7 @@ export function exportToDocx(exportData) {
         
         /* Link styling */
         a {
-          color: #3498db;
+          color: ${isLightTheme ? '#3498db' : '#4a9eff'};
           text-decoration: none;
         }
         a:hover {
@@ -184,12 +193,12 @@ export function exportToDocx(exportData) {
           margin: 15px 0;
         }
         th, td {
-          border: 1px solid #ddd;
+          border: 1px solid ${isLightTheme ? '#ddd' : '#444'};
           padding: 8px 12px;
           text-align: left;
         }
         th {
-          background: #f8f9fa;
+          background: ${isLightTheme ? '#f8f9fa' : '#2a2a2a'};
           font-weight: 600;
         }
         
@@ -205,7 +214,7 @@ export function exportToDocx(exportData) {
         /* Paragraph styling */
         p {
           margin: 10px 0;
-          text-align: justify;
+          text-align: left;
         }
       </style>
     </head>

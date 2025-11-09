@@ -5,6 +5,64 @@ All notable changes to AI Chat Exporter will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2025-11-09
+
+### 🎉 Major UI Overhaul
+
+#### Added
+- **Three-Button Interface** - Replaced single export button with three dedicated buttons:
+  - Word Export button (W icon)
+  - PDF Export button (PDF text)
+  - Settings button (⚙ icon)
+- **Dynamic Export Button** - Green export button appears automatically when messages are selected
+- **Settings Panel** - Comprehensive side panel with 7 configuration options:
+  - Filename format customization
+  - Document title override
+  - Page margins (normal, narrow, moderate, wide)
+  - Theme selection (light/dark)
+  - Page orientation (portrait/landscape)
+  - Page format (A4, Letter, Legal)
+  - Compression toggle
+- **Settings Persistence** - Uses Chrome Storage Sync API for cross-device settings
+- **Theme Support** - Light and dark themes for both DOCX and PDF exports
+- **Enhanced DOCX Export** - Theme-aware styling with customizable margins
+- **Enhanced PDF Export** - Configurable page size, orientation, and margins
+- **36x36px SVG Icons** - Larger, clearer icons for better visibility
+- **DeepSeek Header Detection** - Improved button placement for DeepSeek platform
+
+#### Changed
+- Export workflow now requires format selection before message selection
+- Settings are configured separately from export process
+- DOCX export text alignment changed from justified to left-aligned
+- Button styling now platform-specific with native integration
+- Export button only appears when messages are selected
+
+#### Removed
+- Markdown export format (focused on DOCX and PDF only)
+- Single-button export interface
+- Inline format selection during export
+- Unused background.js storage settings
+- Unused popup.js format change event listener
+
+#### Fixed
+- DeepSeek button visibility (added header detection and fallback positioning)
+- Icon size consistency across all platforms
+- CSS styling issues with button containers
+
+## [1.1.1] - 2025-11-09
+
+### Removed
+- Removed unused BaseParser.js file (parsers are now standalone)
+- Removed unused MarkdownExporter.js file (feature not implemented)
+- Removed development documentation files (FIX_APPLIED.md, FORMATTING_UPGRADE.md, IMPROVEMENTS.md, PROJECT_COMPLETE.md, TESTING.md, LIBRARIES.md)
+- Removed Claude.ai references from manifest (not yet implemented)
+- Removed duplicate utility functions from content.js (htmlToText, escapeHtml, duplicate sanitizeFilename)
+
+### Changed
+- Updated README.md with accurate file structure and removed outdated references
+- Updated CONTRIBUTING.md with correct parser implementation examples
+- Updated TROUBLESHOOTING.md with accurate code examples
+
 ## [1.0.0] - 2025-11-02
 
 ### 🎉 Initial Release
@@ -91,28 +149,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned for v1.2
+### Planned Features
 - [ ] Claude.ai platform support
-- [ ] Gemini platform support
-- [ ] Custom export templates
-- [ ] Settings page with preferences
-- [ ] Native DOCX format support (using docx.js)
-- [ ] Improved PDF generation (using jsPDF)
-
-### Planned for v1.2
+- [ ] Poe.com platform support
 - [ ] Image export support
+- [ ] Custom export templates
+- [ ] Native DOCX format support (using docx.js)
 - [ ] Export history
 - [ ] Advanced filtering (by date, role, keywords)
-- [ ] Custom CSS themes
 - [ ] Keyboard shortcuts
-- [ ] Browser sync for settings
-
-### Planned for v2.0
-- [ ] Cloud backup integration (optional)
-- [ ] Collaborative annotations
-- [ ] Advanced search within exports
-- [ ] Export scheduling
-- [ ] API for third-party integrations
 
 ---
 
